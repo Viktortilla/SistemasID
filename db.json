@@ -5,17 +5,20 @@
             "id":1,
             "name":"jugador1",
             "deck":[1,2,3,4,5]
+
         },
         {
             "id":2,
             "name":"jugador2",
             "deck":[2,4,2,4,2]
+
         }
         ,
         {
             "id":3,
             "name":"jugador3",
             "deck":[9,8,7,6,1]
+            
         }
 
     ]
