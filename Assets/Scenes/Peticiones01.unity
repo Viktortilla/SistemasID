@@ -651,7 +651,8 @@ MonoBehaviour:
   - {fileID: 2026778001}
   CuadroDeImagen: {fileID: 1495433474}
   userId: 1
-  myApiPath: https://my-json-server.typicode.com/HeroFromThePast/FakeApi2023
+  Personaje: 7
+  myApiPath: https://my-json-server.typicode.com/Viktortilla/SistemasID
   rickYMortyApi: https://rickandmortyapi.com/api
   numeroDelPersonaje: 0100000002000000030000000400000005000000
 --- !u!114 &1430844954

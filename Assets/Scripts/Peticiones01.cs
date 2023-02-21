@@ -10,7 +10,8 @@ public class Peticiones01 : MonoBehaviour
     [SerializeField] RawImage[] YourRawImage;
     [SerializeField] RawImage CuadroDeImagen;
     [SerializeField] int userId = 1;
-    [SerializeField] string myApiPath = "https://my-json-server.typicode.com/HeroFromThePast/FakeApi2023";
+    [SerializeField] int Personaje = 1;
+    [SerializeField] string myApiPath = "https://my-json-server.typicode.com/Viktortilla/SistemasID";
     [SerializeField] string rickYMortyApi = "https://rickandmortyapi.com/api";
     int[] downloadedDeck = new int[5];
     int imageIndex = 0;
@@ -18,9 +19,11 @@ public class Peticiones01 : MonoBehaviour
     [SerializeField] int[] numeroDelPersonaje = {1,2,3,4,5};
     public void PresionarBoton()
     {
-        StartCoroutine(ConsultarRickyMorty());
-        StartCoroutine(ConsultarJsonRYM());
-        StartCoroutine(ConsultarJsonRYMManual());
+        //StartCoroutine(ConsultarRickyMorty());
+        //StartCoroutine(ConsultarJsonRYM());
+        StartCoroutine(ConsultarPersonajeIndividual());
+        //StartCoroutine(ConsultarJsonRYMManual());
+        //StartCoroutine(RickYMortyAPI());
     }
     IEnumerator ConsultarRickyMorty()
     {
@@ -101,6 +104,35 @@ public class Peticiones01 : MonoBehaviour
             }
         }
     }
+    IEnumerator ConsultarPersonajeIndividual()
+    {
+        UnityWebRequest www = UnityWebRequest.Get(rickYMortyApi+"/character/"+Personaje );//leer URL, recuerda estar en la seccion correcta /usuarios /ejemplos etc
+        yield return www.Send();
+        if (www.isNetworkError)
+        {
+            Debug.Log("NETWORK ERROR: " + www.error);
+        }
+        else
+        {
+            
+            if (www.responseCode == 200)
+            {
+                
+
+                PersonajeModelo personaje = JsonUtility.FromJson<PersonajeModelo>(www.downloadHandler.text);
+             
+                StartCoroutine(MostrarUnaImagen(personaje.image));
+
+            }
+            else
+            {
+                string message = "status: " + www.responseCode;
+                message += "\ncontent-type: " + www.GetResponseHeader("content-type");
+                message += "\nError: " + www.error;
+                Debug.Log(message);
+            }
+        }
+    }
     IEnumerator ConsultarJsonRYMManual()
     {
         UnityWebRequest www = UnityWebRequest.Get(rickYMortyApi+"/character" );//leer URL, recuerda estar en la seccion correcta /usuarios /ejemplos etc
@@ -156,6 +188,105 @@ public class Peticiones01 : MonoBehaviour
                 message += "\nError: " + www.error;
                 Debug.Log(message);
             }
+        }
+    }
+    
+    IEnumerator RickYMortyAPI()
+    {
+        UnityWebRequest www = UnityWebRequest.Get(rickYMortyApi+"/character" );//leer URL, recuerda estar en la seccion correcta /usuarios /ejemplos etc
+        yield return www.Send();
+        if (www.isNetworkError)
+        {
+            Debug.Log("NETWORK ERROR: " + www.error);
+        }
+        else
+        {
+            
+            if (www.responseCode == 200)
+            {
+                
+                //toma la informacion del Json y conectala con el personaje modelo 
+                ListaDePersonajesModelo personajesDelJson = JsonUtility.FromJson<ListaDePersonajesModelo>(www.downloadHandler.text);
+                StartCoroutine(CosultarApiJson(personajesDelJson));
+                
+                
+                
+                //consultar nombres (por protecciones de la api solo te mandaara los primeros 20)
+                foreach (PersonajeModelo personajeTemporalDelJson in personajesDelJson.results)
+                {
+                    Debug.Log("Name"+personajeTemporalDelJson.name);
+                    
+                }
+                //pediremos solamente al primer personaje y mostraremos su imagen
+                foreach (PersonajeModelo personajeTemporalDelJson in personajesDelJson.results)
+                {
+                    Debug.Log("Name "+personajeTemporalDelJson.name);
+                    Debug.Log("ImageURL "+personajeTemporalDelJson.image);
+                    StartCoroutine(MostrarUnaImagen(personajeTemporalDelJson.image));
+                    break;//si no lo detienes las imagenes se colocaran en orden de llegada quedando la ultima en llegar
+
+                }
+                
+
+                for (int i = 0; i < numeroDelPersonaje.Length; i++)
+                {
+                    Debug.Log(personajesDelJson.results[numeroDelPersonaje[i]].name);
+                    Debug.Log(personajesDelJson.results[numeroDelPersonaje[i]].id);
+                    
+                    StartCoroutine(DownloadImage(personajesDelJson.results[numeroDelPersonaje[i]].image,i));
+                }
+                
+                
+
+            }
+            else
+            {
+                string message = "status: " + www.responseCode;
+                message += "\ncontent-type: " + www.GetResponseHeader("content-type");
+                message += "\nError: " + www.error;
+                Debug.Log(message);
+            }
+        }
+    }
+    IEnumerator CosultarApiJson(ListaDePersonajesModelo personajesDelJson)
+    {
+        
+        UnityWebRequest www = UnityWebRequest.Get(myApiPath + "/users/" + userId);
+        yield return www.Send();
+
+        if (www.isNetworkError)
+        {
+            Debug.Log("NETWORK ERROR: " + www.error);
+        }
+        else
+        {
+            // Show results as text
+            Debug.Log(www.downloadHandler.text);
+
+            string json = www.downloadHandler.text;
+
+            if (www.responseCode == 200) //funciona
+            {
+                UserJsonData user = JsonUtility.FromJson<UserJsonData>(json);
+                
+                for (int i = 0; i < user.deck.Length; i++)
+                {
+                    Debug.Log(personajesDelJson.results[user.deck[i]].name);
+                    Debug.Log(personajesDelJson.results[user.deck[i]].id);
+                    
+                    StartCoroutine(DownloadImage(personajesDelJson.results[user.deck[i]].image,i));
+                }
+                
+
+            }
+            else
+            {
+                string message = "status: " + www.responseCode;
+                message += "\ncontent-type: " + www.GetResponseHeader("content-type");
+                message += "\nError: " + www.error;
+                Debug.Log(message);
+            }
+
         }
     }
     IEnumerator MostrarUnaImagen(string MediaUrl)
