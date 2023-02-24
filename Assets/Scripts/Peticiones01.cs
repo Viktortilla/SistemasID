@@ -21,9 +21,10 @@ public class Peticiones01 : MonoBehaviour
     {
         //StartCoroutine(ConsultarRickyMorty());
         //StartCoroutine(ConsultarJsonRYM());
-        StartCoroutine(ConsultarPersonajeIndividual());
+        //StartCoroutine(ConsultarPersonajeIndividual());
         //StartCoroutine(ConsultarJsonRYMManual());
         //StartCoroutine(RickYMortyAPI());
+        StartCoroutine(ConsultaActividadUnoRYM());
     }
     IEnumerator ConsultarRickyMorty()
     {
@@ -210,7 +211,7 @@ public class Peticiones01 : MonoBehaviour
                 StartCoroutine(CosultarApiJson(personajesDelJson));
                 
                 
-                
+                /*
                 //consultar nombres (por protecciones de la api solo te mandaara los primeros 20)
                 foreach (PersonajeModelo personajeTemporalDelJson in personajesDelJson.results)
                 {
@@ -226,7 +227,7 @@ public class Peticiones01 : MonoBehaviour
                     break;//si no lo detienes las imagenes se colocaran en orden de llegada quedando la ultima en llegar
 
                 }
-                
+                */
 
                 for (int i = 0; i < numeroDelPersonaje.Length; i++)
                 {
@@ -247,6 +248,74 @@ public class Peticiones01 : MonoBehaviour
                 Debug.Log(message);
             }
         }
+    }
+    IEnumerator ConsultaActividadUnoRYM()
+    {
+        UnityWebRequest wwwJson = UnityWebRequest.Get(myApiPath + "/users/" + userId);
+        yield return wwwJson.Send();
+
+        if (wwwJson.isNetworkError)
+        {
+            Debug.Log("NETWORK ERROR: " + wwwJson.error);
+        }
+        else
+        {
+            
+
+            string json = wwwJson.downloadHandler.text;
+
+            if (wwwJson.responseCode == 200) 
+            {
+                UserJsonData user = JsonUtility.FromJson<UserJsonData>(json);
+                UnityWebRequest www = UnityWebRequest.Get(rickYMortyApi+"/character");
+                yield return www.Send();
+                if (www.isNetworkError)
+                {
+                    Debug.Log("NETWORK ERROR: " + www.error);
+                }
+                else
+                {
+            
+                    if (www.responseCode == 200)
+                    {
+                
+                        //toma la informacion del Json y conectala con el personaje modelo 
+                        
+                        
+                        
+                        for (int i = 0; i < user.deck.Length; i++)
+                        {
+                            UnityWebRequest wwwRYM = UnityWebRequest.Get(rickYMortyApi+"/character/"+user.deck[i]);
+                            yield return wwwRYM.Send();
+                            PersonajeModelo personajesDelJson = JsonUtility.FromJson<PersonajeModelo>(wwwRYM.downloadHandler.text);
+                            Debug.Log(personajesDelJson.name);
+                            Debug.Log(personajesDelJson.id);
+                    
+                            StartCoroutine(DownloadImage(personajesDelJson.image,i));
+                        }
+
+
+                    }
+                    else
+                    {
+                        string message = "status: " + www.responseCode;
+                        message += "\ncontent-type: " + www.GetResponseHeader("content-type");
+                        message += "\nError: " + www.error;
+                        Debug.Log(message);
+                    }
+                }
+                
+            }
+            else
+            {
+                string message = "status: " + wwwJson.responseCode;
+                message += "\ncontent-type: " + wwwJson.GetResponseHeader("content-type");
+                message += "\nError: " + wwwJson.error;
+                Debug.Log(message);
+            }
+
+        }
+        
     }
     IEnumerator CosultarApiJson(ListaDePersonajesModelo personajesDelJson)
     {
@@ -425,3 +494,4 @@ public class PersonajeModelo
     public string image;
 }//esta clase debe tener las propiedades de los personajes en la api
 //los nombres de las propiedades deben ser iguales a los de la api 
+

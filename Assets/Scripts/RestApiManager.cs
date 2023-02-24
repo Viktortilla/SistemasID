@@ -120,6 +120,7 @@ public class UserJsonData
 }
 
 
+
 [System.Serializable]
 public class CharactersList
 {
@@ -144,4 +145,10 @@ public class Character
     public string name;
     public string species;
     public string image;
+}
+
+public class UserList
+{
+    public List<User> usuarios;
+
 }
