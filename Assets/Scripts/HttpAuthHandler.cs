@@ -11,6 +11,18 @@ public class HttpAuthHandler : MonoBehaviour
 
     [SerializeField]
     private string ServerApiURL;
+    
+    [SerializeField]
+    private GameObject canva1;
+    [SerializeField]
+    private GameObject canva2;
+    
+    [SerializeField]
+    private GameObject Scoretext;
+    
+    [SerializeField]
+        private GameObject UsernameText;
+    
 
     public string Token { get; set; }
     public string Username { get; set; }
@@ -20,7 +32,7 @@ public class HttpAuthHandler : MonoBehaviour
     {
        // List<User> lista = new List<User>();
        // List<User> listaOrdenada = lista.OrderByDescending(u => u.data.score).ToList<User>();
-
+       //Scoretext.GetComponent<TMP_Text>().text="hola bb \n sisas";
 
         Token = PlayerPrefs.GetString("token");
         Username = PlayerPrefs.GetString("username");
@@ -35,7 +47,10 @@ public class HttpAuthHandler : MonoBehaviour
             Debug.Log(Token);
             Debug.Log(Username);
             StartCoroutine(GetPerfil());
+            
         }
+        
+
     }
 
     public void Registrar()
@@ -79,6 +94,9 @@ public class HttpAuthHandler : MonoBehaviour
 
                 Debug.Log(jsonData.usuario.username + " se regitro con id " + jsonData.usuario._id);
                 //Proceso de autenticacion
+                canva1.gameObject.SetActive(false);
+                canva2.gameObject.SetActive(true);
+                UsernameText.GetComponent<TMP_Text>().text+=" "+Username;
             }
             else
             {
@@ -119,6 +137,11 @@ public class HttpAuthHandler : MonoBehaviour
 
                 PlayerPrefs.SetString("token", Token);
                 PlayerPrefs.SetString("username", Username);
+                
+                canva1.SetActive(false);
+                canva2.SetActive(true);
+                
+                UsernameText.GetComponent<TMP_Text>().text+=" "+Username;
 
             }
             else
@@ -154,6 +177,75 @@ public class HttpAuthHandler : MonoBehaviour
 
                 Debug.Log(jsonData.usuario.username + " Sigue con la sesion inciada");
                 //Cambiar de escena
+                
+            }
+            else
+            {
+                string mensaje = "Status :" + www.responseCode;
+                mensaje += "\ncontent-type:" + www.GetResponseHeader("content-type");
+                mensaje += "\nError :" + www.error;
+                Debug.Log(mensaje);
+            }
+
+        }
+    }
+    IEnumerator ListScores()
+    {
+        UnityWebRequest www = UnityWebRequest.Get(ServerApiURL + "/api/usuarios");
+        www.SetRequestHeader("x-token", Token);
+
+
+        yield return www.SendWebRequest();
+
+        if (www.isNetworkError)
+        {
+            Debug.Log("NETWORK ERROR :" + www.error);
+        }
+        else
+        {
+            Debug.Log(www.downloadHandler.text);
+
+            if (www.responseCode == 200)
+            {
+
+                Scoretext.GetComponent<TMP_Text>().text="hola bb";
+                
+            }
+            else
+            {
+                string mensaje = "Status :" + www.responseCode;
+                mensaje += "\ncontent-type:" + www.GetResponseHeader("content-type");
+                mensaje += "\nError :" + www.error;
+                Debug.Log(mensaje);
+            }
+
+        }
+    }
+    IEnumerator ModificarScore(string postData,string usuario )
+    {
+        
+        UnityWebRequest www = UnityWebRequest.Put(ServerApiURL + "/api/usuarios/"+usuario, postData);
+        www.method = "PATCH";
+        www.SetRequestHeader("Content-Type", "application/json");
+
+
+        yield return www.SendWebRequest();
+
+        if (www.isNetworkError)
+        {
+            Debug.Log("NETWORK ERROR :" + www.error);
+        }
+        else
+        {
+            Debug.Log(www.downloadHandler.text);
+
+            if (www.responseCode == 200)
+            {
+                User usuarioTemp = JsonUtility.FromJson<User>(www.downloadHandler.text);
+
+                usuarioTemp.data.score=int.Parse(GameObject.Find("AdicionarScore").GetComponent<TMP_InputField>().text);
+                Scoretext.GetComponent<TMP_Text>().text=""+usuarioTemp.data.score;
+                
             }
             else
             {
@@ -166,6 +258,7 @@ public class HttpAuthHandler : MonoBehaviour
         }
     }
 }
+
 
 [System.Serializable]
 public class User
